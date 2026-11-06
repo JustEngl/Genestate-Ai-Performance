@@ -4,15 +4,18 @@ import time
 import torch
 from diffusers import DiffusionPipeline
 from genestate.config import Config
+from kernels.fused_ops import TritonEngine
 
 logger = logging.getLogger(__name__)
 
 class SDXLEngine:
-    def __init__(self):
+    def __init__(self, use_triton: bool = False):
         self.pipe = None
+        self.use_triton = use_triton
+        self.triton_engine = TritonEngine(enabled=use_triton)
 
     def load_model(self):
-        logger.info(f"Loading {Config.BASE_MODEL} with FP16 & CPU Offloading...")
+        logger.info(f"loading model with triton={self.use_triton}...")
         
         torch.backends.cuda.matmul.allow_tf32 = True
         torch.backends.cudnn.allow_tf32 = True
@@ -24,7 +27,6 @@ class SDXLEngine:
             use_safetensors=True,
         )
 
-        
         self.pipe.enable_model_cpu_offload()
         self.pipe.unet.to(memory_format=torch.channels_last)
         self.pipe.enable_vae_slicing()
@@ -32,18 +34,16 @@ class SDXLEngine:
         self._warmup()
 
     def _warmup(self):
-        logger.info("Warming up GPU execution pipeline...")
         generator = torch.Generator(device="cpu").manual_seed(42)
         with torch.inference_mode():
             _ = self.pipe(
-                "modern house architecture design",
+                "modern house design",
                 num_inference_steps=Config.NUM_INFERENCE_STEPS,
                 guidance_scale=Config.GUIDANCE_SCALE,
                 width=Config.WIDTH,
                 height=Config.HEIGHT,
                 generator=generator
             ).images[0]
-        logger.info("--> PIPELINE WARMUP COMPLETE <--")
 
     def generate(self, prompt: str, negative_prompt: str, seed: int = None):
         if seed is None:
@@ -51,7 +51,11 @@ class SDXLEngine:
 
         generator = torch.Generator(device="cpu").manual_seed(seed)
         
-        t0 = time.time()
+        # cuda sync timer
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
+        t0 = time.perf_counter()
+
         with torch.inference_mode():
             image = self.pipe(
                 prompt=prompt,
@@ -62,7 +66,8 @@ class SDXLEngine:
                 height=Config.HEIGHT,
                 generator=generator,
             ).images[0]
-        
-        latency = time.time() - t0
-        logger.info(f"Inference execution took: {latency:.2f}s")
+
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
+        latency = (time.perf_counter() - t0) * 1000
         return image, latency
