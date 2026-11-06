@@ -1,0 +1,16 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Model Data & Heavy Artifacts
+*.safetensors
+*.onnx
+*.engine
+*.plan
+*.bin
+
+# Output Images & Logs
+*.webp
+*.png
+*.log
