@@ -10,13 +10,13 @@ from genestate.config import Config
 
 logger = logging.getLogger(__name__)
 
-# Fix: Register MSVC compiler path for Windows JIT compilation
+# msvc compiler for windows for jit
 if sys.platform == "win32":
     msvc_bin = r"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.43.34808\bin\Hostx64\x64"
     if os.path.exists(msvc_bin) and msvc_bin not in os.environ["PATH"]:
         os.environ["PATH"] = msvc_bin + os.path.pathsep + os.environ["PATH"]
 
-# JIT load native C++/CUDA extension using Ninja and MSVC
+# native cpp/cu jit
 CUDA_EXT_AVAILABLE = False
 genestate_cuda_ops = None
 
@@ -33,9 +33,9 @@ try:
         verbose=False
     )
     CUDA_EXT_AVAILABLE = True
-    print("--> Native C++/CUDA JIT Extension loaded successfully via MSVC & Ninja! <--")
+    print(" Native C++/CUDA JIT Extension loaded successfully via MSVC & Ninja")
 except Exception as e:
-    print(f"--> c++/cuda jit fallback: {e} <--")
+    print(f" c++/cuda jit fallback: {e} ")
 
 
 class SDXLEngine:
@@ -46,7 +46,7 @@ class SDXLEngine:
     def load_model(self):
         logger.info(f"loading model in mode: {self.mode}...")
         
-        # TF32 execution on RTX 3070 Ti Ampere Tensor Cores
+        # TF32 execution on 3070ti ampere
         torch.backends.cuda.matmul.allow_tf32 = True
         torch.backends.cudnn.allow_tf32 = True
         torch.backends.cudnn.benchmark = True
@@ -58,17 +58,17 @@ class SDXLEngine:
             use_safetensors=True,
         )
 
-        # Fast DPM++ 2M Karras Scheduler
+        # Fast dpm++ 2M Karras Scheduler
         self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(
             self.pipe.scheduler.config, algorithm_type="dpmsolver++", use_karras_sigmas=True
         )
 
-        # Smart CPU offloading prevents Windows 8GB VRAM swapping freezing
+        # CPU OFFLOAD - TRY TO GET RID OF IT!!! currently vram limits so its needed
         self.pipe.enable_model_cpu_offload()
         self.pipe.enable_vae_slicing()
 
         if self.mode == "cuda_optimized":
-            # Channels Last tensor memory layout (Massive speedup on Tensor Cores)
+            
             self.pipe.unet.to(memory_format=torch.channels_last)
 
         self._warmup()
