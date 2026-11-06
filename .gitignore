@@ -14,3 +14,6 @@ __pycache__/
 *.webp
 *.png
 *.log
+
+.aider/
+REPO_MAP.md

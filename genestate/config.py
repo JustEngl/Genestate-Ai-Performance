@@ -11,3 +11,5 @@ class Config:
     GUIDANCE_SCALE: float = 3.0
     HEIGHT: int = 864
     WIDTH: int = 864
+
+    
