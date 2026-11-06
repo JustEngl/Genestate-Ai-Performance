@@ -15,7 +15,8 @@ def cleanup_vram():
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
         torch.cuda.ipc_collect()
-
+        
+#method below is ai generated verify output later
 def generate_benchmark_plot(base_lats, cuda_lats, save_path="benchmark_results.png"):
     plt.style.use('dark_background')
     fig, ax = plt.subplots(figsize=(9, 5), facecolor='#0f172a')
@@ -42,7 +43,7 @@ def generate_benchmark_plot(base_lats, cuda_lats, save_path="benchmark_results.p
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, facecolor=fig.get_facecolor())
     plt.close()
-    console.print(f"\n[bold green]✓ Benchmark plot saved to {save_path}[/bold green]")
+    console.print(f"\n[bold green] Benchmark plot saved to {save_path}[/bold green]")
 
 
 def run_benchmark_suite(num_runs: int = 3):
@@ -62,12 +63,12 @@ def run_benchmark_suite(num_runs: int = 3):
         base_lats.append(lat)
         console.print(f"  [dim]run {i+1}: {lat:.2f} ms[/dim]")
 
-    # CRITICAL: Clean VRAM completely before second engine allocation
+    
     del engine_base
     cleanup_vram()
 
-    # 2. CUDA Accelerated Pass
-    console.print("\n[bold green]► Running CUDA Accelerated Engine...[/bold green]")
+    # cuda accelarted path
+    console.print("\n[bold green] Running CUDA Accelerated Engine...[/bold green]")
     engine_cuda = SDXLEngine(mode="cuda_optimized")
     engine_cuda.load_model()
 
@@ -84,7 +85,7 @@ def run_benchmark_suite(num_runs: int = 3):
     avg_cuda = sum(cuda_lats) / len(cuda_lats)
     speedup = ((avg_base - avg_cuda) / avg_base) * 100
 
-    # Summary Table
+    # summary
     table = Table(title="ENGINE BENCHMARK SUMMARY", style="bold white on #1e293b", header_style="bold magenta")
     table.add_column("Engine Mode", style="cyan")
     table.add_column("Avg Latency (ms)", justify="right", style="bold")
