@@ -17,3 +17,36 @@ __pycache__/
 
 .aider/
 REPO_MAP.md
+
+# Genestate AI - Ignored Files & Artifacts
+
+# Compiled Engines and ONNX exports (do not commit large model binaries)
+models/
+*.onnx
+*.engine
+*.pb
+*.weights
+*.bin
+*.safetensors
+
+# Virtual Environment & Python Cache
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# C++ / CUDA Build Artifacts
+cppcuda/build/
+*.obj
+*.so
+*.dylib
+*.dll
+*.exe
+*.exp
+*.lib
+
+# IDE & OS Settings
+.vscode/
+.idea/
+.DS_Store

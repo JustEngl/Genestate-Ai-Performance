@@ -2,7 +2,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-// CUDA kernel execution layout
+
 __global__ void fused_bias_gelu_kernel(const float* __restrict__ input, const float* __restrict__ bias, float* __restrict__ output, int size, int bias_size) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < size) {
@@ -12,7 +12,7 @@ __global__ void fused_bias_gelu_kernel(const float* __restrict__ input, const fl
     }
 }
 
-// C++ launcher wrapper for pytorch integration
+
 torch::Tensor launch_fused_bias_gelu(torch::Tensor input, torch::Tensor bias) {
     auto output = torch::empty_like(input);
     int size = input.numel();
